@@ -32,7 +32,7 @@ async function getSongs(folder) {
     for (let index = 0; index < as.length; index++) {
         const element = as[index];
         if (element.href.endsWith(".mp3")) {
-            songs.push(element.href.split(`/${folder}/`)[1])
+            songs.push(element.href.split(`/${folder}/info.json`)[1])
         }
     }
 
@@ -73,7 +73,7 @@ const playMusic = (track, pause = false) => {
 
 async function displayAlbums() {
     console.log("Displaying Albums")
-    let a = await fetch(`/songs/info.json`)
+    let a = await fetch(`/songs/ncs/info.json`)
     let response = await a.text();
     let div = document.createElement("div")
     div.innerHTML = response;
