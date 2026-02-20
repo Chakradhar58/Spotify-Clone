@@ -23,19 +23,14 @@ async function getSongs(folder) {
 
     // ✅ FIXED
     let a = await fetch(`/songs/${folder}/info.json`)
-    let response = await a.text();
+    let data = await a.json();
     let div = document.createElement("div")
     div.innerHTML = response;
     let as = div.getElementsByTagName("a")
 
     songs = []
 
-    for (let index = 0; index < as.length; index++) {
-        const element = as[index];
-        if (element.href.endsWith(".mp3")) {
-            songs.push(element.href.split(`/songs/${folder}/`)[1])
-        }
-    }
+    songs = data.songs;
 
     let songUL = document.querySelector(".songlist ul")
     songUL.innerHTML = ""
