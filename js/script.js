@@ -113,8 +113,7 @@ async function displayAlbums() {
 async function main() {
 
     // ✅ FIXED (REMOVED songs/)
-    await getSongs("ncs")
-    playMusic(songs[0], true)
+    
 
     displayAlbums()
 
