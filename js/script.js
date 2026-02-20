@@ -4,7 +4,7 @@ let currentSong = new Audio();
 let songs = [];
 let currFolder = "";
 
-// Convert seconds to mm:ss
+// Format time mm:ss
 function formatTime(seconds) {
     if (isNaN(seconds)) return "00:00";
     let m = Math.floor(seconds / 60);
@@ -12,7 +12,7 @@ function formatTime(seconds) {
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-// Fetch songs from album folder
+// Fetch songs from selected album
 async function getSongs(folder) {
     currFolder = folder;
 
@@ -27,7 +27,6 @@ async function getSongs(folder) {
     songs.forEach(song => {
         let li = document.createElement("li");
         li.innerHTML = `
-            <img width="34" src="img/music.svg">
             <div class="info">
                 <div>${song}</div>
             </div>
@@ -43,20 +42,22 @@ async function getSongs(folder) {
     return songs;
 }
 
-// Play music
-function playMusic(track, pause = false) {
+// Play music properly (stops previous)
+function playMusic(track) {
+    if (!track) return;
+
+    currentSong.pause();
+    currentSong.currentTime = 0;
+
     currentSong.src = `/songs/${currFolder}/${track}`;
+    currentSong.load();
+    currentSong.play();
 
     document.querySelector(".songinfo").innerText = track;
-    document.querySelector(".songtime").innerText = "00:00 / 00:00";
-
-    if (!pause) {
-        currentSong.play();
-        document.getElementById("play").src = "img/pause.svg";
-    }
+    document.getElementById("play").src = "img/pause.svg";
 }
 
-// Display all albums from index.json
+// Display album cards dynamically
 async function displayAlbums() {
     const res = await fetch("/songs/index.json");
     const data = await res.json();
@@ -73,12 +74,11 @@ async function displayAlbums() {
         card.dataset.folder = folder;
 
         card.innerHTML = `
-            <img src="/songs/${folder}/cover.jpeg" alt="${info.title}">
+            <img src="/songs/${folder}/cover.jpeg">
             <h2>${info.title}</h2>
             <p>${info.description}</p>
         `;
 
-        // Click album → load songs + play first
         card.addEventListener("click", async () => {
             await getSongs(folder);
             playMusic(songs[0]);
@@ -88,12 +88,18 @@ async function displayAlbums() {
     }
 }
 
-// Main
+// MAIN
 async function main() {
     await displayAlbums();
 
-    // Play / Pause
     const playBtn = document.getElementById("play");
+    const nextBtn = document.getElementById("next");
+    const prevBtn = document.getElementById("previous");
+    const volumeInput = document.querySelector(".range input");
+    const seekbar = document.querySelector(".seekbar");
+    const circle = document.querySelector(".circle");
+
+    // Play / Pause
     playBtn.addEventListener("click", () => {
         if (currentSong.paused) {
             currentSong.play();
@@ -104,24 +110,8 @@ async function main() {
         }
     });
 
-    // Time update
-    currentSong.addEventListener("timeupdate", () => {
-        document.querySelector(".songtime").innerText =
-            `${formatTime(currentSong.currentTime)} / ${formatTime(currentSong.duration)}`;
-
-        document.querySelector(".circle").style.left =
-            (currentSong.currentTime / currentSong.duration) * 100 + "%";
-    });
-
-    // Seekbar
-    document.querySelector(".seekbar").addEventListener("click", e => {
-        const percent =
-            e.offsetX / e.target.getBoundingClientRect().width;
-        currentSong.currentTime = currentSong.duration * percent;
-    });
-
     // Next
-    document.getElementById("next").addEventListener("click", () => {
+    nextBtn.addEventListener("click", () => {
         let index = songs.indexOf(currentSong.src.split("/").pop());
         if (index < songs.length - 1) {
             playMusic(songs[index + 1]);
@@ -129,11 +119,34 @@ async function main() {
     });
 
     // Previous
-    document.getElementById("previous").addEventListener("click", () => {
+    prevBtn.addEventListener("click", () => {
         let index = songs.indexOf(currentSong.src.split("/").pop());
         if (index > 0) {
             playMusic(songs[index - 1]);
         }
+    });
+
+    // Volume slider (WORKING)
+    volumeInput.addEventListener("input", (e) => {
+        currentSong.volume = e.target.value / 100;
+    });
+
+    // Time update + seek circle
+    currentSong.addEventListener("timeupdate", () => {
+        if (!isNaN(currentSong.duration)) {
+            document.querySelector(".songtime").innerText =
+                `${formatTime(currentSong.currentTime)} / ${formatTime(currentSong.duration)}`;
+
+            circle.style.left =
+                (currentSong.currentTime / currentSong.duration) * 100 + "%";
+        }
+    });
+
+    // Seekbar click
+    seekbar.addEventListener("click", (e) => {
+        const percent =
+            e.offsetX / seekbar.getBoundingClientRect().width;
+        currentSong.currentTime = currentSong.duration * percent;
     });
 }
 
