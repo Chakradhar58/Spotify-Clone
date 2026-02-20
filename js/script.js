@@ -46,7 +46,7 @@ async function getSongs(folder) {
 
     Array.from(document.querySelectorAll(".songlist li")).forEach(e => {
         e.addEventListener("click", () => {
-            playMusic(e.querySelector(".info div").innerHTML.trim())
+            playMusic(songs[index])
         })
     })
 
